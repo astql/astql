@@ -13,12 +13,12 @@ class TestQueryBasic(TestCase):
                           PyString(var='str2',content='invoice_date')))
         query=Query(start='tests/examples',
                     pattern=pattern)
-        self.assertEqual(query.start,'tests/examples')
+        self.assertEqual(query.start,'tests/examples/example1')
         self.assertEqual(query.pattern,pattern)
         results=[x for x in query.get_results()]
         r=results[0]
         self.assertEqual(r.pyfile.name,'example1.py')
-        self.assertEqual(r.pyfile.relative_dir,'examples')
+        self.assertEqual(r.pyfile.relative_dir,'example1')
         self.assertEqual(r.pyfile.num_lines,5)
         self.assertEqual(r.cl.name,'Class1')
         self.assertEqual(r.cl.line_start,1)
