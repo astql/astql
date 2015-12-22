@@ -16,7 +16,19 @@ class TestQueryBasic(TestCase):
         self.assertEqual(r['pyfile']['name'],'example1.py')
         self.assertEqual(r['pyfile']['relative_dir'],'tests/examples/example1')
         self.assertEqual(r['pyfile']['num_lines'],5)
-        
+
+    def testPyClass(self):
+        pattern=PyClass(var='c1')
+        query=Query(start='tests/examples/example1',
+                    pattern=pattern)
+        self.assertEqual(query.start,'tests/examples/example1')
+        self.assertEqual(query.pattern,pattern)
+        results=[x for x in query.get_results()]
+        r=results[0]
+        self.assertEqual(r['c1']['name'],'Class1')
+        self.assertEqual(r['c1']['line_start'],1)
+        self.assertEqual(r['c1']['line_end'],4)
+        self.assertEqual(r['c1']['num_lines'],4)
       
     def testStack(self):
         pattern=Stack(PyFile(var='pyfile'),

@@ -4,6 +4,48 @@ import os
 import ast
 import copy
 
+class PythonNodeDecorator(ast.NodeVisitor):
+    def generic_visit(self,node):
+        try:
+            max_line=node.lineno
+        except:
+            max_line=0
+        super(PythonNodeDecorator,self).generic_visit(node)
+        try:
+            for fieldname, value in ast.iter_fields(node):
+                try:
+                    if type(value)!=list:
+                        max_line=max(max_line,value.line_end)
+                    else:
+                        for x in value:
+                            max_line=max(max_line,x.line_end)
+                except:
+                    pass
+        except:
+            pass
+        node.line_end=max_line
+        
+        
+
+class PythonNodeVisitor(ast.NodeVisitor):
+    def __init__(self,pattern,result_dict):
+        self.pattern=pattern
+        self.result_dict=result_dict
+        self.results=[]
+        super(PythonNodeVisitor,self).__init__()
+
+    def process(self,node):
+        PythonNodeDecorator().visit(node)
+        self.visit(node)
+        
+    def visit_ClassDef(self, node):
+        for x in self.pattern.node_enter('python_class',self.result_dict,name=node.name,
+                                         line_start=node.lineno,line_end=node.line_end,num_lines=node.line_end-node.lineno+1):
+            self.results.append(x)
+        self.generic_visit(node)
+        self.pattern.node_exit('python_class',self.result_dict,name=node.name)
+
+
 class BaseConstructorMixin(object):
     def setUp(self):
         pass
@@ -39,12 +81,15 @@ class Query(KwConstructorMixin):
                                               relative_dir=relative_dir):
             yield result
         tree=ast.parse(file_content)
-        
+        visitor=PythonNodeVisitor(self.pattern,self.result_dict)
+        visitor.process(tree)
+        for r in visitor.results: 
+            yield r
         self.pattern.node_exit('python_file',self.result_dict,file_content=file_content)
         return
         yield
         
-        
+
 class PyFile(KwConstructorMixin):
     def node_enter(self,pattern_type,result_dict,*args,**kwargs):
         if pattern_type=='python_file':
@@ -60,7 +105,20 @@ class PyFile(KwConstructorMixin):
             del result_dict[self.var]
 
 class PyClass(KwConstructorMixin):
-    pass
+    def node_enter(self,pattern_type,result_dict,*args,**kwargs):
+        if pattern_type=='python_class':
+            result_dict[self.var]={'name':kwargs['name'],
+                                   'line_start':kwargs['line_start'],
+                                   'line_end':kwargs['line_end'],
+                                   'num_lines':kwargs['num_lines']
+                                  }
+            yield copy.copy(result_dict)
+        return
+        yield
+    def node_exit(self,pattern_type,result_dict,*args,**kwargs):
+        if pattern_type=='python_class':
+            print "result_dict3",result_dict
+            del result_dict[self.var]
 
 class PyMethod(KwConstructorMixin):
     pass
