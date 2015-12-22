@@ -117,7 +117,6 @@ class PyClass(KwConstructorMixin):
         yield
     def node_exit(self,pattern_type,result_dict,*args,**kwargs):
         if pattern_type=='python_class':
-            print "result_dict3",result_dict
             del result_dict[self.var]
 
 class PyMethod(KwConstructorMixin):
