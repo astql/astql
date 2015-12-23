@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from unittest import TestCase
 from mock import MagicMock as mm
-from astql import Query,PyFile,PyClass,PyMethod,And,PyString,Stack
+from astql import Query,PyFile,PyClass,PyFunction,And,PyString,Stack
 
 class TestQueryBasic(TestCase):
     def testPyFile(self):
@@ -29,7 +29,20 @@ class TestQueryBasic(TestCase):
         self.assertEqual(r['c1']['line_start'],1)
         self.assertEqual(r['c1']['line_end'],4)
         self.assertEqual(r['c1']['num_lines'],4)
-      
+        
+    def testPyFunction(self):
+        pattern=PyFunction(var='f')
+        query=Query(start='tests/examples/example1',
+                    pattern=pattern)
+        self.assertEqual(query.start,'tests/examples/example1')
+        self.assertEqual(query.pattern,pattern)
+        results=[x for x in query.get_results()]
+        r=results[0]
+        self.assertEqual(r['f']['name'],'m1')
+        self.assertEqual(r['f']['line_start'],2)
+        self.assertEqual(r['f']['line_end'],4)
+        self.assertEqual(r['f']['num_lines'],3)
+        
     def testStack(self):
         pattern=Stack(PyFile(var='pyfile'),
                       PyClass(var='cl'),

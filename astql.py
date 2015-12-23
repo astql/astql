@@ -40,11 +40,18 @@ class PythonNodeVisitor(ast.NodeVisitor):
         
     def visit_ClassDef(self, node):
         for x in self.pattern.node_enter('python_class',self.result_dict,name=node.name,
-                                         line_start=node.lineno,line_end=node.line_end,num_lines=node.line_end-node.lineno+1):
+                                         line_start=node.lineno,line_end=node.line_end,
+                                         num_lines=node.line_end-node.lineno+1):
             self.results.append(x)
         self.generic_visit(node)
         self.pattern.node_exit('python_class',self.result_dict,name=node.name)
-
+    def visit_FunctionDef(self, node):
+        for x in self.pattern.node_enter('python_function',self.result_dict,name=node.name,
+                                         line_start=node.lineno,line_end=node.line_end,
+                                         num_lines=node.line_end-node.lineno+1):
+            self.results.append(x)
+        self.generic_visit(node)
+        self.pattern.node_exit('python_function',self.result_dict,name=node.name)
 
 class BaseConstructorMixin(object):
     def setUp(self):
@@ -119,8 +126,20 @@ class PyClass(KwConstructorMixin):
         if pattern_type=='python_class':
             del result_dict[self.var]
 
-class PyMethod(KwConstructorMixin):
-    pass
+class PyFunction(KwConstructorMixin):
+    def node_enter(self,pattern_type,result_dict,*args,**kwargs):
+        if pattern_type=='python_function':
+            result_dict[self.var]={'name':kwargs['name'],
+                                   'line_start':kwargs['line_start'],
+                                   'line_end':kwargs['line_end'],
+                                   'num_lines':kwargs['num_lines']
+                                  }
+            yield copy.copy(result_dict)
+        return
+        yield
+    def node_exit(self,pattern_type,result_dict,*args,**kwargs):
+        if pattern_type=='python_function':
+            del result_dict[self.var]
 
 class And(ArgsConstructorMixin):
     pass
