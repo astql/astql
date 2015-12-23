@@ -37,21 +37,20 @@ class PythonNodeVisitor(ast.NodeVisitor):
     def process(self,node):
         PythonNodeDecorator().visit(node)
         self.visit(node)
+    
+    def feed_pattern(self,node,pattern_type):
+        for x in self.pattern.node_enter(pattern_type,self.result_dict,name=node.name,
+                                         line_start=node.lineno,line_end=node.line_end,
+                                         num_lines=node.line_end-node.lineno+1):
+            self.results.append(x)
+        self.generic_visit(node)
+        self.pattern.node_exit(pattern_type,self.result_dict,name=node.name)        
         
     def visit_ClassDef(self, node):
-        for x in self.pattern.node_enter('python_class',self.result_dict,name=node.name,
-                                         line_start=node.lineno,line_end=node.line_end,
-                                         num_lines=node.line_end-node.lineno+1):
-            self.results.append(x)
-        self.generic_visit(node)
-        self.pattern.node_exit('python_class',self.result_dict,name=node.name)
+        self.feed_pattern(node,'python_class')
+
     def visit_FunctionDef(self, node):
-        for x in self.pattern.node_enter('python_function',self.result_dict,name=node.name,
-                                         line_start=node.lineno,line_end=node.line_end,
-                                         num_lines=node.line_end-node.lineno+1):
-            self.results.append(x)
-        self.generic_visit(node)
-        self.pattern.node_exit('python_function',self.result_dict,name=node.name)
+        self.feed_pattern(node,'python_function')
 
 class BaseConstructorMixin(object):
     def setUp(self):
