@@ -33,7 +33,7 @@ class TestQueryBasic(TestCase):
     def testStack(self):
         pattern=Stack(PyFile(var='pyfile'),
                       PyClass(var='cl'),
-                      PyMethod(var='m'),
+                      PyFunction(var='m'),
                       And(PyString(var='str1',content='inv.agreement'),
                           PyString(var='str2',content='invoice_date')))
         query=Query(start='tests/examples/example1',
