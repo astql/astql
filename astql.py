@@ -51,6 +51,13 @@ class PythonNodeVisitor(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node):
         self.feed_pattern(node,'python_function')
+    def visit_Str(self, node):
+        for x in self.pattern.node_enter('python_string',self.result_dict,content=node.s,
+                                         line_start=node.lineno,line_end=node.line_end,
+                                         num_lines=node.line_end-node.lineno+1):
+            self.results.append(x)
+        self.generic_visit(node)
+        self.pattern.node_exit('python_string',self.result_dict,content=node.s)  
 
 class BaseConstructorMixin(object):
     def setUp(self):
@@ -144,7 +151,19 @@ class And(ArgsConstructorMixin):
     pass
 
 class PyString(KwConstructorMixin):
-    pass
+    def node_enter(self,pattern_type,result_dict,*args,**kwargs):
+        if pattern_type=='python_string':
+            result_dict[self.var]={'content':kwargs['content'],
+                                   'line_start':kwargs['line_start'],
+                                   'line_end':kwargs['line_end'],
+                                   'num_lines':kwargs['num_lines']
+                                  }
+            yield copy.copy(result_dict)
+        return
+        yield
+    def node_exit(self,pattern_type,result_dict,*args,**kwargs):
+        if pattern_type=='python_string':
+            del result_dict[self.var]
 
 class Stack(ArgsConstructorMixin):
     def setUp(self):
