@@ -5,7 +5,8 @@ import ast
 import copy
 
 '''
-Veure si es pot reduir num arguments node_exit
+*Veure si es pot reduir num arguments node_exit
+*Stack.node_exit
 '''
 
 class PythonNodeDecorator(ast.NodeVisitor):
@@ -169,11 +170,16 @@ class Stack(ArgsConstructorMixin):
     def node_enter(self,pattern_type,result_dict,*args,**kwargs):
         yielded=False
         if self.level<len(self.args):
+            results=[]
             for result in self.args[self.level].node_enter(pattern_type,result_dict,*args,**kwargs):
-                yielded=True
-                yield result
+                yielded=True  
+                results.append(result)
             if yielded:
                 self.level+=1
+                if self.level==len(self.args):
+                    for r in results:
+                        yield r
+                    
         return 
         yield
     def node_exit(self,pattern_type,result_dict,*args,**kwargs):
