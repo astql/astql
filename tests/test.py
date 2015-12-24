@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from unittest import TestCase
 from mock import MagicMock as mm
-from astql import Query,PyFile,PyClass,PyFunction,And,PyString,Stack
+from astql import Query,PyFile,PyClass,And,PyString,Stack,PyFunction
 
 class TestQueryBasic(TestCase):
     def testPyFile(self):

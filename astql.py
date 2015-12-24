@@ -109,15 +109,20 @@ class Query(KwConstructorMixin):
 
 class BasePattern(object):
     pattern_type=None
+    def cond_enter(self,pattern_type,result_dict,*args,**kwargs):
+        return pattern_type==self.pattern_type
+    
     def node_enter(self,pattern_type,result_dict,*args,**kwargs):
-        if pattern_type==self.pattern_type:
+        if self.cond_enter(pattern_type,result_dict,*args,**kwargs):
             result_dict[self.var]=kwargs
             yield copy.copy(result_dict)
         return
         yield
     def node_exit(self,pattern_type,result_dict,*args,**kwargs):
-        if pattern_type==self.pattern_type:
+        if self.cond_enter(pattern_type,result_dict,*args,**kwargs):
             del result_dict[self.var]
+            return True
+        return False
             
 class PyFile(KwConstructorMixin,BasePattern):
     pattern_type='python_file'
@@ -129,10 +134,34 @@ class PyFunction(KwConstructorMixin,BasePattern):
     pattern_type='python_function'
 
 class And(ArgsConstructorMixin):
-    pass
+    def setUp(self):
+        self.to_found=set(self.args)
+        self.found=set()
+    def node_enter(self,pattern_type,result_dict,*args,**kwargs):
+        previously_not_empty=self.to_found!=set()
+        for p in self.to_found-self.found:
+            yielded=False
+            for result in p.node_enter(pattern_type,result_dict,*args,**kwargs):
+                yielded=True
+            if yielded:
+                self.found=self.found|set([p])
+                self.to_found=self.to_found-set([p])
+        if previously_not_empty and self.to_found==set():
+            yield copy.copy(result_dict)
+        return
+        yield
+    def node_exit(self,pattern_type,result_dict,*args,**kwargs):
+        if self.to_found==set():
+            for p in self.found:
+                if p.node_exit(pattern_type,result_dict,*args,**kwargs):
+                    self.found=self.found-set([p])
+        return False        
 
 class PyString(KwConstructorMixin,BasePattern):
-    pattern_type='python_string'
+    pattern_type='python_string'    
+    def cond_enter(self,pattern_type,result_dict,*args,**kwargs):
+        return super(PyString,self).cond_enter(pattern_type,result_dict,*args,**kwargs) \
+               and (not hasattr(self,'content') or self.content == kwargs['content'])
 
 class Stack(ArgsConstructorMixin):
     def setUp(self):
