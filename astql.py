@@ -4,6 +4,10 @@ import os
 import ast
 import copy
 
+'''
+Veure si es pot reduir num arguments node_exit
+'''
+
 class PythonNodeDecorator(ast.NodeVisitor):
     def generic_visit(self,node):
         try:
