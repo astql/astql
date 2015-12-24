@@ -60,6 +60,24 @@ class TestQueryBasic(TestCase):
         self.assertEqual(r['s']['line_end'],4)
         self.assertEqual(r['s']['num_lines'],1) 
         
+    def testAnd(self):
+        pattern=And(PyString(var='str1',content='inv.agreement'),
+                          PyString(var='str2',content='invoice_date'))
+        query=Query(start='tests/examples/example1',
+                    pattern=pattern)
+        self.assertEqual(query.start,'tests/examples/example1')
+        self.assertEqual(query.pattern,pattern)
+        results=[x for x in query.get_results()]
+        r=results[0]
+        self.assertEqual(r['str1']['content'],'inv.agreement')
+        self.assertEqual(r['str1']['line_start'],3)
+        self.assertEqual(r['str1']['line_end'],3)
+        self.assertEqual(r['str1']['num_lines'],1)
+        self.assertEqual(r['str2']['content'],'invoice_date')
+        self.assertEqual(r['str2']['line_start'],4)
+        self.assertEqual(r['str2']['line_end'],4)
+        self.assertEqual(r['str2']['num_lines'],1) 
+        
     def testStack(self):
         pattern=Stack(PyFile(var='pyfile'),
                       PyClass(var='cl'),

@@ -94,6 +94,7 @@ class Query(KwConstructorMixin):
         file_content=open(os.path.join(relative_dir,file_name),'r').read()
         for result in self.pattern.node_enter('python_file',self.result_dict,
                                               file_content=file_content,
+                                              num_lines=len(file_content.split('\n')),
                                               name=file_name,
                                               relative_dir=relative_dir):
             yield result
@@ -105,69 +106,33 @@ class Query(KwConstructorMixin):
         self.pattern.node_exit('python_file',self.result_dict,file_content=file_content)
         return
         yield
-        
 
-class PyFile(KwConstructorMixin):
+class BasePattern(object):
+    pattern_type=None
     def node_enter(self,pattern_type,result_dict,*args,**kwargs):
-        if pattern_type=='python_file':
-            result_dict[self.var]={'name':kwargs['name'],
-                                   'relative_dir':kwargs['relative_dir'],
-                                   'num_lines':len(kwargs['file_content'].split('\n'))
-                                  }
+        if pattern_type==self.pattern_type:
+            result_dict[self.var]=kwargs
             yield copy.copy(result_dict)
         return
         yield
     def node_exit(self,pattern_type,result_dict,*args,**kwargs):
-        if pattern_type=='python_file':
+        if pattern_type==self.pattern_type:
             del result_dict[self.var]
+            
+class PyFile(KwConstructorMixin,BasePattern):
+    pattern_type='python_file'
 
-class PyClass(KwConstructorMixin):
-    def node_enter(self,pattern_type,result_dict,*args,**kwargs):
-        if pattern_type=='python_class':
-            result_dict[self.var]={'name':kwargs['name'],
-                                   'line_start':kwargs['line_start'],
-                                   'line_end':kwargs['line_end'],
-                                   'num_lines':kwargs['num_lines']
-                                  }
-            yield copy.copy(result_dict)
-        return
-        yield
-    def node_exit(self,pattern_type,result_dict,*args,**kwargs):
-        if pattern_type=='python_class':
-            del result_dict[self.var]
+class PyClass(KwConstructorMixin,BasePattern):
+    pattern_type='python_class'
 
-class PyFunction(KwConstructorMixin):
-    def node_enter(self,pattern_type,result_dict,*args,**kwargs):
-        if pattern_type=='python_function':
-            result_dict[self.var]={'name':kwargs['name'],
-                                   'line_start':kwargs['line_start'],
-                                   'line_end':kwargs['line_end'],
-                                   'num_lines':kwargs['num_lines']
-                                  }
-            yield copy.copy(result_dict)
-        return
-        yield
-    def node_exit(self,pattern_type,result_dict,*args,**kwargs):
-        if pattern_type=='python_function':
-            del result_dict[self.var]
+class PyFunction(KwConstructorMixin,BasePattern):
+    pattern_type='python_function'
 
 class And(ArgsConstructorMixin):
     pass
 
-class PyString(KwConstructorMixin):
-    def node_enter(self,pattern_type,result_dict,*args,**kwargs):
-        if pattern_type=='python_string':
-            result_dict[self.var]={'content':kwargs['content'],
-                                   'line_start':kwargs['line_start'],
-                                   'line_end':kwargs['line_end'],
-                                   'num_lines':kwargs['num_lines']
-                                  }
-            yield copy.copy(result_dict)
-        return
-        yield
-    def node_exit(self,pattern_type,result_dict,*args,**kwargs):
-        if pattern_type=='python_string':
-            del result_dict[self.var]
+class PyString(KwConstructorMixin,BasePattern):
+    pattern_type='python_string'
 
 class Stack(ArgsConstructorMixin):
     def setUp(self):
