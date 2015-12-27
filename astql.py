@@ -156,6 +156,9 @@ class And(ArgsConstructorMixin):
             for p in self.found:
                 if p.node_exit(pattern_type,result_dict,*args,**kwargs):
                     self.found=self.found-set([p])
+                    self.to_found=self.to_found|set([p])
+                if self.found==set():
+                    return True
         return False        
 
 class PyString(KwConstructorMixin,BasePattern):
@@ -178,9 +181,13 @@ class Stack(ArgsConstructorMixin):
                 self.level+=1
                 if self.level==len(self.args):
                     for r in results:
-                        yield r
-                    
+                        yield copy.copy(r)
         return 
         yield
     def node_exit(self,pattern_type,result_dict,*args,**kwargs):
-        pass
+        if self.level>0:
+            pattern=self.args[self.level-1]
+            if pattern.node_exit(pattern_type,result_dict,*args,**kwargs):
+                self.level-=1
+
+        
