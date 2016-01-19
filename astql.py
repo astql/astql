@@ -110,20 +110,38 @@ class Query(KwConstructorMixin):
 
 class BasePattern(object):
     pattern_type=None
+    def __init__(self):
+        self.has_matched=False
+        self.is_matching=False
+
     def cond_enter(self,pattern_type,result_dict,*args,**kwargs):
         return pattern_type==self.pattern_type
     
     def node_enter(self,pattern_type,result_dict,*args,**kwargs):
         if self.cond_enter(pattern_type,result_dict,*args,**kwargs):
             result_dict[self.var]=kwargs
+            self.is_matching=True
+            self.has_matched=True
             yield copy.copy(result_dict)
         return
         yield
+
     def node_exit(self,pattern_type,result_dict,*args,**kwargs):
         if self.cond_enter(pattern_type,result_dict,*args,**kwargs):
             del result_dict[self.var]
+            self.is_matching=False
             return True
         return False
+
+    def is_matching(self):
+        return self.is_matching
+
+    def has_matched(self):
+        return self.has_matched
+
+    def reset_has_matched(self):
+        self.has_matched=False
+
             
 class PyFile(KwConstructorMixin,BasePattern):
     pattern_type='python_file'
